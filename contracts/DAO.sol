@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract DAO {
 	/**
@@ -26,11 +28,21 @@ contract DAO {
         availableFunds += msg.value;
     }
     
+    /**
+     * 1. Allow investors to redeem shares
+     */
     function redeemShare(uint amount) external payable {
         require(shares[msg.sender] >= amount, "not enought shares");
         require(availableFunds >= amount, "not enought availableFunds");
         shares[msg.sender] -= amount;
         availableFunds -= amount;
         payable(msg.sender).transfer(amount);
-    }	
+    }
+
+    function transferShare(uint amount, address to) external {
+        require(shares[msg.sender] >= amount, "not enought shares");
+        shares[msg.sender] -= amount;
+        shares[to] += amount;
+        investors[to] = true;
+    }
 }

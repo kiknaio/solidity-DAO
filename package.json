@@ -1,0 +1,26 @@
+{
+  "devDependencies": {
+    "@openzeppelin/contracts": "^4.2.0"
+  },
+  "name": "dao",
+  "description": "DAO implementation in Solidity for all the EVM-based blockchains.",
+  "version": "1.0.0",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kiknaio/solidity-DAO.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kiknaio/solidity-DAO/issues"
+  },
+  "homepage": "https://github.com/kiknaio/solidity-DAO#readme"
+}
