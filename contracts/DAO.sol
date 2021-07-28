@@ -10,11 +10,28 @@ contract DAO {
      * 4. Allow investment proposals to be created and voted
      * 5. Execute successful investment proposal (i.e. send money)
     */
+
+    struct Proposal {
+        uint id;
+        string name;
+        uint amount;
+        address payable recipient;
+        uint votes;
+        uint end;
+        bool executed;
+    }
+
     mapping(address => bool) public investors;
     mapping(address => uint) public shares;
+    mapping(uint => Proposal) public proposals;
+    mapping(address => mapping(uint => bool)) public votes;
     uint public totalShares;
     uint public availableFunds;
     uint public contributionEnd;
+    uint public nextProposalId;
+    uint public voteTime;
+    uint public quorum;
+    address public chairman;
     
     constructor(uint contributionTime) {
         contributionEnd = block.timestamp + contributionTime;
@@ -44,5 +61,41 @@ contract DAO {
         shares[msg.sender] -= amount;
         shares[to] += amount;
         investors[to] = true;
+    }
+
+    function createProposal(
+        string _name,
+        uint _amount,
+        address payable _recipient,
+        uint _end
+    ) external onlyInvestors {
+        require(availableFunds >= _amount, "not enought available funds");
+        proposals[nextProposalId] = Proposal(
+            nextProposalId,
+            _name,
+            _amount,
+            _recipient,
+            0,
+            block.timestamp + voteTime,
+            false
+        );
+        availableFunds -= _amount;
+        nextProposalId++;
+    }
+
+    function vote(uint proposalId) external onlyInvestors {
+        // Storage pointer to selected proposal
+        Proposal storage proposal = proposals[proposalId];
+        
+        require(votes[msg.sender][proposalId] == false, "already voted");
+        require(proposal.end > block.timestamp, "you can only vote until proposal end");
+
+        votes[msg.sender][proposalId] = true;
+        proposal.votes += shares[msg.sender];
+    }
+
+    modifier onlyInvestors() {
+        require(investors[msg.sender] == true, "only investors can execute");
+        _;
     }
 }
