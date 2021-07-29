@@ -30,11 +30,20 @@ contract DAO {
     uint public contributionEnd;
     uint public nextProposalId;
     uint public voteTime;
+    // A quorum is the minimum number of votes that a distributed transaction has to obtain in order to be allowed to perform an operation in a distributed system.
     uint public quorum;
     address public chairman;
     
-    constructor(uint contributionTime) {
+    constructor(
+        uint contributionTime,
+        uint _voteTime,
+        uint _quorum
+    ) {
+        require(_quorum > 0 && _quorum < 100, 'Quorum must be between 1 and 99');
         contributionEnd = block.timestamp + contributionTime;
+        _voteTime = _voteTime;
+        quorum = _quorum;
+        chairman = msg.sender;
     }
     
     function contribute() payable external {
@@ -94,8 +103,36 @@ contract DAO {
         proposal.votes += shares[msg.sender];
     }
 
+    function executeProposal(uint proposalId) external {
+        Proposal storage proposal = proposals[proposalId];
+
+        require(proposal.end < block.timestamp, "you can only execute proposal after it's end");
+        require(proposal.executed == false, "proposal already executed");
+        require((proposal.votes / totalShares) * 100 >= quorum, "not enough votes");
+        _transferEther(proposal.recipient, proposal.amount);
+    }
+
+    function withdrawEther(uint amount, address payable to) external onlyChairman() {
+        _transferEther(to, amount);
+    }
+
+    function _tranferEther(address to, uint amount) internal {
+        require(availableFunds >= amount, "not enought available funds");
+        availableFunds -= amount;
+        payable(to).transfer(amount);
+    }
+
     modifier onlyInvestors() {
         require(investors[msg.sender] == true, "only investors can execute");
         _;
+    }
+
+    modifier onlyChairman() {
+        require(chairman == msg.sender, "only chairman can execute");
+        _;
+    }
+
+    fallback() payable external {
+        availableFunds += msg.value;
     }
 }
